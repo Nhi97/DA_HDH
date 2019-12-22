@@ -1,7 +1,6 @@
 package jtree;
 
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.io.File;
 import java.util.Date;
 import java.util.List;
@@ -12,7 +11,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JTree;
-import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionListener;
@@ -23,12 +21,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeSelectionModel;
 
-/**
- *
- * @author nhile
- */
 public class JFTree extends JPanel {
-
     private File folder;
     private static String pathFolder;
     private DefaultMutableTreeNode root;
@@ -47,9 +40,23 @@ public class JFTree extends JPanel {
     private TreeSelectionListener treeSelectionListener;
 
     public JFTree(String pathFolder) {
-        //this.setLayout(new BorderLayout());
+        this.setLayout(new BorderLayout());
+        initComps();
         this.pathFolder = pathFolder;
+        initTreeView();
+    }
 
+    private void initComps() {
+        fileName = new JLabel();
+        path = new JTextField();
+        date = new JLabel();
+        size = new JLabel();
+        table = new JTable();
+        setSize(1000, 600);
+        setVisible(true);
+    }
+
+    private void initTreeView() {
         fileSystemView = FileSystemView.getFileSystemView();
         folder = new File(pathFolder);
         System.out.println("folder: " + folder);
@@ -81,22 +88,12 @@ public class JFTree extends JPanel {
         tree.setSelectionRow(0);
         treeScroll.setViewportView(tree);
         treeScroll.setBorder(new EmptyBorder(0, 0, 0, 0));
-        this.add(treeScroll);
-        System.out.println("==============");
-    }
+        this.add(treeScroll, BorderLayout.WEST);
 
-    private void initComps() {
-
-        fileName = new JLabel();
-        path = new JTextField();
-        date = new JLabel();
-        size = new JLabel();
-        table = new JTable();
-
-        setSize(1000, 600);
-
-        setVisible(true);
-
+        //add fileTableModel
+        fileTableModel = new FileTableModel(listFiles);
+        table = new JTable(fileTableModel);
+        this.add(table, BorderLayout.CENTER);
     }
 
     protected void showChildren(DefaultMutableTreeNode node) {
@@ -105,17 +102,14 @@ public class JFTree extends JPanel {
             @Override
             public Void doInBackground() {
                 File file = (File) node.getUserObject();
-                //setFileDetails(file);
+                setFileDetails(file);
                 if (file.isDirectory()) {
                     File[] listFiles = file.listFiles();
                     if (node.isLeaf()) {
                         for (File child : listFiles) {
-                            if (child.isDirectory()) {
                                 publish(child);
-                            }
                         }
                     }
-                    //setTableData(listFiles);
                 }
                 return null;
             }
@@ -135,20 +129,19 @@ public class JFTree extends JPanel {
         worker.execute();
     }
 
-    private void setTableData(File[] files) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                if (fileTableModel == null) {
-                    fileTableModel = new FileTableModel();
-                    table.setModel(fileTableModel);
-                }
-                table.getSelectionModel().removeListSelectionListener(listSelectionListener);
-                fileTableModel.setFiles(files);
-                table.getSelectionModel().addListSelectionListener(listSelectionListener);
-
-            }
-        });
-    }
+//    private void setTableData(File[] files) {
+//        SwingUtilities.invokeLater(new Runnable() {
+//            public void run() {
+//                if (fileTableModel == null) {
+//                    fileTableModel = new FileTableModel();
+//                    table.setModel(fileTableModel);
+//                }
+//                table.getSelectionModel().removeListSelectionListener(listSelectionListener);
+//                fileTableModel.setFiles(files);
+//                table.getSelectionModel().addListSelectionListener(listSelectionListener);
+//            }
+//        });
+//    }
 
     private void setFileDetails(File file) {
         currentFile = file;
